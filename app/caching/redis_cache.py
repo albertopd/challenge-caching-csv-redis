@@ -1,7 +1,7 @@
 import logging
 import redis
 from typing import Any
-from app.cache import Cache
+from app.caching.cache import Cache
 
 
 class RedisCache(Cache):

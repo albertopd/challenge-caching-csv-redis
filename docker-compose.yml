@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+  app:
+    build: .
+    depends_on:
+      - redis
+    env_file:
+      - .env
+    volumes:
+      - .:/usr/src/app
+    command: ["python", "-m", "app.main"]

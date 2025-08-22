@@ -1,6 +1,6 @@
 import pandas as pd
-from app.cache import Cache
-from app.time_utils import time_execution
+from app.caching.cache import Cache
+from app.utils.timing import time_execution
 
 
 class FlightInsights:
@@ -13,7 +13,11 @@ class FlightInsights:
     _ORIGIN_AIRPORT_COLUMN = "ORIGIN_AIRPORT"
     _FLIGHT_NUMBER_COLUMN = "FLIGHT_NUMBER"
 
-    def __init__(self, flights_df: pd.DataFrame, cache: Cache | None = None):
+    def __init__(
+        self, 
+        flights_df: pd.DataFrame, 
+        cache: Cache | None = None
+    ):
         """
         Initialize FlightInsights with a DataFrame and optional cache.
         Args:
@@ -43,7 +47,9 @@ class FlightInsights:
 
     @time_execution
     def avg_dep_delay_per_airline(
-        self, airline: str, months: list[int] | None = None
+        self, 
+        airline: str, 
+        months: list[int] | None = None
     ) -> float:
         """
         Calculate the average departure delay for a given airline, optionally filtered by months.

@@ -2,8 +2,8 @@ import logging
 import os
 
 import pandas as pd
-from app.flight_insights import FlightInsights
-from app.redis_cache import RedisCache
+from app.domain.flight_insights import FlightInsights
+from app.caching.redis_cache import RedisCache
 
 logging.basicConfig(
     level=logging.INFO,

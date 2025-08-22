@@ -1,65 +1,114 @@
 # Challenge: Caching CSV Data Processing with Redis in Python
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Python](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/) ![Pandas](https://img.shields.io/badge/pandas-2.3-%23150458.svg?logo=pandas) ![NumPy](https://img.shields.io/badge/numpy-2.3-%23013243.svg?logo=numpy) ![Redis](https://img.shields.io/badge/redis-6.4-red?logo=redis&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Python](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/) ![Pandas](https://img.shields.io/badge/pandas-2.3-%23150458.svg?logo=pandas) ![NumPy](https://img.shields.io/badge/numpy-2.3-%23013243.svg?logo=numpy) ![Redis](https://img.shields.io/badge/redis-6.4-red?logo=redis&logoColor=white) ![Docker](https://img.shields.io/badge/docker-26.1-%230db7ed.svg?logo=docker&logoColor=white)
 
-This project aims to demonstrate the use of Redis as a caching layer for processing CSV data in Python. By caching intermediate results, we can significantly speed up data processing tasks, especially when dealing with large datasets.
+This project demonstrates the use of Redis as a caching layer for processing CSV data in Python. By caching intermediate results, data processing tasks become significantly faster, especially with large datasets.
 
 ## ✨ Features
 
-- Caching of CSV data processing results using Redis.
-- Efficient retrieval of cached data.
-- Easy integration with existing Python data processing workflows.
+- Speed up data processing — cache expensive CSV computations in Redis to avoid recalculating results.
+- Automatic cache refresh — expired keys are recomputed on demand, ensuring results stay fresh.
+- Flexible queries — supports aggregations like average delays per airline or total flights per airport.
+- Pluggable design — a generic cache interface makes it easy to swap Redis for another backend.
+- Dockerized setup — run the app and Redis with a single docker-compose up.
 
 ## 📂 Project Structure
 
 ```
 challenge-caching-csv-redis/
-├── app/
-│   ├── cache.py
-│   ├── flight_insights.py
-│   ├── main.py
-│   ├── redis_cache.py
-│   └── time_utils.py
-├── data/
-│   ├── flights.csv
-│   └── README.md
-├── .env
-├── LICENSE
-├── README.md
-└── requirements.txt
+|
+├── app/                            # Application source code
+|   ├── caching/                    # All cache-related logic
+│   │   ├── cache.py                # Generic cache interface
+│   │   └── redis_cache.py          # Redis cache implementation
+│   │
+│   ├── domain/                     # Domain-specific logic
+│   │   └── flight_insights.py      # Flight insights logic
+│   │
+│   ├── utils/                      # Helpers and utilities
+│   │   └── timing.py               # Execution timing decorator
+│   │
+│   └── main.py                     # Application entry point
+|
+├── data/                           # Directory for datasets
+│   ├── flights.csv                 # CSV file containing flight records (must be downloaded manually)
+│   └── README.md                   # Documentation about how to download the CSV file
+|
+├── .env                            # Local environment variables
+├── LICENSE                         # License information
+├── README.md                       # Project documentation
+└── requirements.txt                # Python dependencies
 ```
+## 📋 Requirements
 
-## 🚀 How to Install & Run Redis
+- Python 3.13 or later
+- Redis server (if not using Docker)
+- Required Python packages listed in `requirements.txt`
 
-1. **Install Redis**
-	- On Windows: Download from https://github.com/microsoftarchive/redis/releases and run the installer.
-	- On macOS: `brew install redis`
-	- On Linux: `sudo apt-get install redis-server`
+## 📦 Installation
 
-2. **Start Redis Server**
-	- On Windows: Run `redis-server.exe` from the installation directory.
-	- On macOS/Linux: Run `redis-server`
+### Manual Installation (without Docker)
 
-3. **Verify Redis is Running**
-	- Run `redis-cli ping` and expect a reply: `PONG`
-
-## 🏃 How to Run the App
-
-1. Install Python dependencies:
+1. Clone the repository:
+	```sh
+	git clone https://github.com/albertopd/challenge-caching-csv-redis.git
+	cd challenge-caching-csv-redis
+	```
+2. Install Python dependencies:
 	```sh
 	pip install -r requirements.txt
 	```
+3. Install and start Redis (see [official docs](https://redis.io/docs/)).
 
-2. Start Redis server (see above).
+### Using Docker & Docker Compose
 
-3. Run the application:
+1. Clone the repository:
 	```sh
-	python app/main.py
+	git clone https://github.com/albertopd/challenge-caching-csv-redis.git
+	cd challenge-caching-csv-redis
 	```
 
-## 📝 Sample Logs
+2. Build and start service and app:
+	```sh
+	docker-compose up --build
+	```
 
-### On first run (no cache):
+	This starts both Redis and the Python app in separate containers.
+
+## ⚙️ Configuration
+
+Configuration is managed via the `.env` file. Example:
+
+```env
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DB=0
+CACHE_EXP_IN_MINS=1
+```
+
+* Adjust these values to match your environment or Docker setup.
+* The `docker-compose.yml` automatically loads `.env` for the app service.
+
+## 🚀 Usage
+
+### Running Manually
+
+Start Redis, then run the app:
+
+```sh
+python -m app.main
+```
+
+### Running with Docker Compose
+
+```sh
+docker-compose up --build
+docker compose logs -f app
+```
+
+## 📝 Example Output Logs
+
+**On first run (no cache):**
 
 ```
 2025-08-21 21:12:08 [INFO] Successfully connected to Redis!
@@ -71,37 +120,10 @@ challenge-caching-csv-redis/
 2025-08-21 21:12:18 [INFO] FINISHED function 'avg_dep_delay_per_airline' in 0.261304 seconds
 
 Average departure delay for VX airline: 30 minutes
-
-2025-08-21 21:12:18 [INFO] STARTED function 'avg_dep_delay_per_airline'
-2025-08-21 21:12:18 [INFO] Cache miss for key: [avg_dep_delay_VX_[8, 6, 7]]
-2025-08-21 21:12:18 [INFO] Set key: [avg_dep_delay_VX_[8, 6, 7]] with expiration: 1 minutes
-2025-08-21 21:12:18 [INFO] FINISHED function 'avg_dep_delay_per_airline' in 0.228608 seconds
-
-Average departure delay for VX airline in summer months (Jun, Jul, Aug): 28 minutes
-
-2025-08-21 21:12:18 [INFO] STARTED function 'max_dep_delay_per_airline'
-2025-08-21 21:12:18 [INFO] Cache miss for key: [max_dep_delay_VX]
-2025-08-21 21:12:18 [INFO] Set key: [max_dep_delay_VX] with expiration: 1 minutes
-2025-08-21 21:12:18 [INFO] FINISHED function 'max_dep_delay_per_airline' in 0.272232 seconds
-
-Max departure delay for VX airline: 644 minutes
-
-2025-08-21 21:12:18 [INFO] STARTED function 'max_dep_delay_per_airline'
-2025-08-21 21:12:18 [INFO] Cache miss for key: [max_dep_delay_VX_[12]]
-2025-08-21 21:12:19 [INFO] Set key: [max_dep_delay_VX_[12]] with expiration: 1 minutes
-2025-08-21 21:12:19 [INFO] FINISHED function 'max_dep_delay_per_airline' in 0.232055 seconds
-
-Max departure delay for VX airline in December: 363 minutes
-
-2025-08-21 21:12:19 [INFO] STARTED function 'total_flights_per_origin_airport'
-2025-08-21 21:12:19 [INFO] Cache miss for key: [total_flights_origin_SFO]
-2025-08-21 21:12:19 [INFO] Set key: [total_flights_origin_SFO] with expiration: 1 minutes
-2025-08-21 21:12:19 [INFO] FINISHED function 'total_flights_per_origin_airport' in 0.276766 seconds
-
-Total flights for SFO airport: 2640
+...
 ```
 
-### On second run (cache hit):
+**On second run (cache hit):**
 
 ```
 2025-08-21 21:13:51 [INFO] Successfully connected to Redis!
@@ -112,30 +134,7 @@ Total flights for SFO airport: 2640
 2025-08-21 21:14:00 [INFO] FINISHED function 'avg_dep_delay_per_airline' in 0.001438 seconds
 
 Average departure delay for VX airline: 30 minutes
-
-2025-08-21 21:14:00 [INFO] STARTED function 'avg_dep_delay_per_airline'
-2025-08-21 21:14:00 [INFO] Cache hit for key: [avg_dep_delay_VX_[8, 6, 7]]
-2025-08-21 21:14:00 [INFO] FINISHED function 'avg_dep_delay_per_airline' in 0.000891 seconds
-
-Average departure delay for VX airline in summer months (Jun, Jul, Aug): 28 minutes
-
-2025-08-21 21:14:00 [INFO] STARTED function 'max_dep_delay_per_airline'
-2025-08-21 21:14:00 [INFO] Cache hit for key: [max_dep_delay_VX]
-2025-08-21 21:14:00 [INFO] FINISHED function 'max_dep_delay_per_airline' in 0.000811 seconds
-
-Max departure delay for VX airline: 644 minutes
-
-2025-08-21 21:14:00 [INFO] STARTED function 'max_dep_delay_per_airline'
-2025-08-21 21:14:00 [INFO] Cache hit for key: [max_dep_delay_VX_[12]]
-2025-08-21 21:14:00 [INFO] FINISHED function 'max_dep_delay_per_airline' in 0.000798 seconds
-
-Max departure delay for VX airline in December: 363 minutes
-
-2025-08-21 21:14:00 [INFO] STARTED function 'total_flights_per_origin_airport'
-2025-08-21 21:14:00 [INFO] Cache hit for key: [total_flights_origin_SFO]
-2025-08-21 21:14:00 [INFO] FINISHED function 'total_flights_per_origin_airport' in 0.001875 seconds
-
-Total flights for SFO airport: 2640
+...
 ```
 
 ## ⚡ Performance Comparison
@@ -148,19 +147,12 @@ Total flights for SFO airport: 2640
 | max_dep_delay_per_airline (Dec)     | 0.232055 seconds             | 0.000798 seconds            |
 | total_flights_per_origin_airport    | 0.276766 seconds             | 0.001875 seconds            |
 
-Caching with Redis dramatically reduces repeated computation time for the same query.
-
-## 📋 Requirements
-
-- Python 3.13 or later
-- Redis server
-- Required Python packages listed in `requirements.txt`
+Redis caching dramatically reduces repeated computation time for the same queries.
 
 ## 📜 License
 
 This project is licensed under the [MIT License](LICENSE).
 
-
 ## 👤 Author
 
-- [Alberto Pérez Dávila](https://github.com/albertopd)
+[Alberto Pérez Dávila](https://github.com/albertopd)
