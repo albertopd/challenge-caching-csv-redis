@@ -24,7 +24,7 @@ challenge-caching-csv-redis/
 │   │   └── redis_cache.py          # Redis cache implementation
 │   │
 │   ├── data_sources/               # Data source adapters
-│   │   ├── data_source.py       # Abstract FlightDataSource interface
+│   │   ├── data_source.py       	# Abstract FlightDataSource interface
 │   │   └── csv_data_source.py      # CSV/Polars implementation
 │   │
 │   ├── domain/                     # Domain-specific logic
