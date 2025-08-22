@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+
 class Cache(ABC):
     """
     Abstract base class for cache implementations.
@@ -15,7 +16,7 @@ class Cache(ABC):
             value (Any): The value to cache.
             exp_in_mins (int | None): Expiration time in minutes. If None, use default.
         """
-        pass
+        ...
 
     @abstractmethod
     def get(self, key: str) -> Any:
@@ -26,11 +27,11 @@ class Cache(ABC):
         Returns:
             Any: The cached value, or None if not found.
         """
-        pass
+        ...
 
     @abstractmethod
     def clear(self):
         """
         Clear all values from the cache.
         """
-        pass
+        ...

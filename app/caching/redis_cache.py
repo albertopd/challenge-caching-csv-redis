@@ -1,13 +1,14 @@
 import logging
+import pickle
 import redis
-from typing import Any
+from typing import Any, cast
 from app.caching.cache import Cache
 
 
 class RedisCache(Cache):
     """
-    Redis-backed cache implementation.
-    Provides methods to set, get, and clear cache using Redis.
+    Implements a cache using Redis as the backend.
+    Stores Python objects using pickle serialization and supports expiration.
     """
 
     def __init__(
@@ -18,12 +19,16 @@ class RedisCache(Cache):
         default_exp_in_mins: int = 60,
     ):
         """
-        Initialize RedisCache and establish connection with Redis server.
-        Args:
-            redis_host (str): Redis server hostname.
-            redis_port (int): Redis server port.
-            redis_db (int): Redis database number.
-            default_exp_in_mins (int): Default expiration time in minutes.
+        Create a RedisCache instance and connect to Redis.
+
+        Parameters:
+            redis_host (str): Hostname for Redis server.
+            redis_port (int): Port for Redis server.
+            redis_db (int): Database index for Redis.
+            default_exp_in_mins (int): Default expiration time for cache entries (minutes).
+
+        Raises:
+            redis.ConnectionError: If connection or ping to Redis fails.
         """
         client = redis.Redis(
             host=redis_host,
@@ -42,38 +47,42 @@ class RedisCache(Cache):
 
     def set(self, key: str, value: Any, exp_in_mins: int | None = None):
         """
-        Set a value in Redis cache with an optional expiration time.
-        Args:
-            key (str): The cache key.
-            value (Any): The value to cache.
-            exp_in_mins (int | None): Expiration time in minutes. If None, use default.
+        Store a value in Redis under the given key, with optional expiration.
+        The value is serialized using pickle.
+
+        Parameters:
+            key (str): Cache key.
+            value (Any): Python object to cache.
+            exp_in_mins (int | None): Expiration time in minutes. Uses default if None.
         """
         if exp_in_mins is None:
             exp_in_mins = self.default_exp_in_mins
 
-        self.client.set(key, value, ex=exp_in_mins * 60)
+        self.client.set(key, pickle.dumps(value), ex=exp_in_mins * 60)
         logging.info(f"Set key: [{key}] with expiration: {exp_in_mins} minutes")
 
     def get(self, key: str) -> Any:
         """
-        Retrieve a value from Redis cache by key.
-        Args:
-            key (str): The cache key.
+        Retrieve a value from Redis by key and deserialize it.
+
+        Parameters:
+            key (str): Cache key.
+
         Returns:
-            Any: The cached value, or None if not found.
+            Any: Cached Python object, or None if not found.
         """
-        value = self.client.get(key)
+        value = cast(bytes | None, self.client.get(key))
 
-        if value is not None:
-            logging.info(f"Cache hit for key: [{key}]")
-            return value
-
-        logging.info(f"Cache miss for key: [{key}]")
-        return None
+        if value is None:
+            logging.info(f"Cache miss for key: [{key}]")
+            return None
+        
+        logging.info(f"Cache hit for key: [{key}]")
+        return pickle.loads(value)
 
     def clear(self):
         """
-        Clear all keys from Redis cache.
+        Remove all keys from the Redis database for this cache instance.
         """
         self.client.flushdb()
         logging.info("Cleared all keys from Redis")

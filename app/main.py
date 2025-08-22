@@ -1,18 +1,12 @@
 import logging
 import os
-
-import pandas as pd
+from app.data_sources.csv_data_source import CsvFlightDataSource
+from app.data_sources.data_source import FlightDataSource
 from app.domain.flight_insights import FlightInsights
 from app.caching.redis_cache import RedisCache
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
 
-
-def setup_redis_cache():
+def setup_redis_cache() -> RedisCache:
     """
     Set up and return a RedisCache instance using environment variables or defaults.
     Returns:
@@ -31,36 +25,57 @@ def setup_redis_cache():
     )
 
 
-def load_flights_dataframe():
+def setup_data_source() -> FlightDataSource:
     """
-    Load the flights CSV data into a pandas DataFrame.
+    Set up and return the flight data source.
+    By default, uses CsvFlightDataSource. To swap out for another source (e.g., database),
+    implement a new class inheriting FlightDataSource and update this function accordingly.
     Returns:
-        pd.DataFrame: DataFrame containing flight data.
+        FlightDataSource: Configured flight data source instance.
     """
-    logging.info("Loading flights data...")
-    df = pd.read_csv("data/flights.csv", low_memory=False)
-    logging.info("Finished loading flights data.")
-    return df
+    data_source = CsvFlightDataSource.from_csv("data/flights.csv")
+    return data_source
 
 
 def main():
     """
     Main entry point for the application. Sets up cache and data, then prints flight insights.
     """
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    
     try:
         cache = setup_redis_cache()
-        flights_df = load_flights_dataframe()
-        flight_insights = FlightInsights(flights_df, cache)
+        data_source = setup_data_source()
+        flight_insights = FlightInsights(data_source, cache)
 
-        print(f"\nAverage departure delay for VX airline: {int(flight_insights.avg_dep_delay_per_airline('VX'))} minutes\n")
+        avg_departure_delay = int(flight_insights.avg_dep_delay_per_airline("VX"))
+        print(
+            f"\nAverage departure delay for VX airline: {avg_departure_delay} minutes\n"
+        )
 
-        print(f"\nAverage departure delay for VX airline in summer months (Jun, Jul, Aug): {int(flight_insights.avg_dep_delay_per_airline('VX', [6, 7, 8]))} minutes\n")
+        avg_departure_delay_summer = int(
+            flight_insights.avg_dep_delay_per_airline("VX", [6, 7, 8])
+        )
+        print(
+            f"\nAverage departure delay for VX airline in summer months (Jun, Jul, Aug): {avg_departure_delay_summer} minutes\n"
+        )
 
-        print(f"\nMax departure delay for VX airline: {int(flight_insights.max_dep_delay_per_airline('VX'))} minutes\n")
+        max_departure_delay = int(flight_insights.max_dep_delay_per_airline("VX"))
+        print(f"\nMax departure delay for VX airline: {max_departure_delay} minutes\n")
 
-        print(f"\nMax departure delay for VX airline in December: {int(flight_insights.max_dep_delay_per_airline('VX', [12]))} minutes\n")
+        max_departure_delay_december = int(
+            flight_insights.max_dep_delay_per_airline("VX", [12])
+        )
+        print(
+            f"\nMax departure delay for VX airline in December: {max_departure_delay_december} minutes\n"
+        )
 
-        print(f"\nTotal flights for SFO airport: {flight_insights.total_flights_per_origin_airport('SFO')}\n")
+        total_flights_sfo = int(flight_insights.total_flights_per_origin_airport("SFO"))
+        print(f"\nTotal flights originating from SFO airport: {total_flights_sfo}\n")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}")

@@ -1,16 +1,17 @@
 # Challenge: Caching CSV Data Processing with Redis in Python
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Python](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/) ![Pandas](https://img.shields.io/badge/pandas-2.3-%23150458.svg?logo=pandas) ![NumPy](https://img.shields.io/badge/numpy-2.3-%23013243.svg?logo=numpy) ![Redis](https://img.shields.io/badge/redis-6.4-red?logo=redis&logoColor=white) ![Docker](https://img.shields.io/badge/docker-26.1-%230db7ed.svg?logo=docker&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Python](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/) ![Polars](https://img.shields.io/badge/polars-0.20-%23013243.svg?logo=polars) ![Redis](https://img.shields.io/badge/redis-6.4-red?logo=redis&logoColor=white) ![Docker](https://img.shields.io/badge/docker-26.1-%230db7ed.svg?logo=docker&logoColor=white)
 
 This project demonstrates the use of Redis as a caching layer for processing CSV data in Python. By caching intermediate results, data processing tasks become significantly faster, especially with large datasets.
 
 ## ✨ Features
 
-- Speed up data processing — cache expensive CSV computations in Redis to avoid recalculating results.
-- Automatic cache refresh — expired keys are recomputed on demand, ensuring results stay fresh.
-- Flexible queries — supports aggregations like average delays per airline or total flights per airport.
-- Pluggable design — a generic cache interface makes it easy to swap Redis for another backend.
-- Dockerized setup — run the app and Redis with a single docker-compose up.
+* Memory-efficient data processing using **lazy Polars**.
+* Flexible data sources — supports CSV, future DB sources, or other adapters.
+* Speed up computations — cache expensive aggregations in Redis to avoid recalculating.
+* Automatic cache refresh — expired keys are recomputed on demand.
+* Pluggable design — generic cache interface allows swapping Redis for another backend.
+* Dockerized setup — run both Redis and the Python app easily.
 
 ## 📂 Project Structure
 
@@ -22,10 +23,16 @@ challenge-caching-csv-redis/
 │   │   ├── cache.py                # Generic cache interface
 │   │   └── redis_cache.py          # Redis cache implementation
 │   │
+│   ├── data_sources/               # Data source adapters
+│   │   ├── data_source.py       # Abstract FlightDataSource interface
+│   │   └── csv_data_source.py      # CSV/Polars implementation
+│   │
 │   ├── domain/                     # Domain-specific logic
+│   |   ├── flight_attributes.py    # Generic flight attributes
 │   │   └── flight_insights.py      # Flight insights logic
 │   │
 │   ├── utils/                      # Helpers and utilities
+|   |   ├── cache_utils.py          # Caching decorator
 │   │   └── timing.py               # Execution timing decorator
 │   │
 │   └── main.py                     # Application entry point
@@ -44,7 +51,6 @@ challenge-caching-csv-redis/
 - Python 3.13 or later
 - Redis server (if not using Docker)
 - Required Python packages listed in `requirements.txt`
-- Dataset `flights.csv` from [Kaggle – Airline Delay Dataset](https://www.kaggle.com/datasets/usdot/flight-delays)
 
 ## 📦 Installation
 

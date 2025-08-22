@@ -3,7 +3,7 @@ import time
 from functools import wraps
 
 
-def time_execution(func):
+def timed(func):
     """
     Decorator to measure and log the execution time of a function.
     Args:
@@ -11,6 +11,7 @@ def time_execution(func):
     Returns:
         callable: The wrapped function with timing.
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         logging.info(f"STARTED function '{func.__name__}'")
@@ -19,7 +20,9 @@ def time_execution(func):
         result = func(*args, **kwargs)
         end = time.perf_counter()
 
-        logging.info(f"FINISHED function '{func.__name__}' in {end - start:.6f} seconds")
+        logging.info(
+            f"FINISHED function '{func.__name__}' in {end - start:.6f} seconds"
+        )
         return result
 
     return wrapper

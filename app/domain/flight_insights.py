@@ -1,51 +1,53 @@
-import pandas as pd
 from app.caching.cache import Cache
-from app.utils.timing import time_execution
+from app.utils.cache_utils import cacheable
+from app.utils.time_utils import timed
+from app.domain.flight_attributes import FlightAttributes
+from app.data_sources.data_source import FlightDataSource
 
 
 class FlightInsights:
     """
     Provides analytical methods for flight data, including delay statistics and flight counts.
-    """
 
-    _AIRLINE_COLUMN = "AIRLINE"
-    _DEPARTURE_DELAY_COLUMN = "DEPARTURE_DELAY"
-    _ORIGIN_AIRPORT_COLUMN = "ORIGIN_AIRPORT"
-    _FLIGHT_NUMBER_COLUMN = "FLIGHT_NUMBER"
+    This class operates on a logical flight data source (FlightDataSource), not directly on raw DataFrames or CSVs.
+    All queries use logical domain attributes (see FlightAttributes), and never reference physical column names.
+    The data source implementation is responsible for mapping logical attributes to the actual columns in the underlying data.
+    This abstraction allows FlightInsights to remain agnostic to changes in the source data format or column names.
+    """
 
     def __init__(
         self, 
-        flights_df: pd.DataFrame, 
+        data_source: FlightDataSource, 
         cache: Cache | None = None
     ):
         """
-        Initialize FlightInsights with a DataFrame and optional cache.
+        Initialize FlightInsights with a logical flight data source and optional cache.
         Args:
-            flights_df (pd.DataFrame): DataFrame containing flight data.
+            data_source (FlightDataSource): Logical flight data source implementing filtering and aggregation.
             cache (Cache | None): Optional cache instance for storing results.
         """
-        self.flights_df = flights_df
+        self.data_source = data_source
         self.cache = cache
 
-    def _validate_months(self, months: list[int]) -> list[int]:
+    def _validate_months(
+        self, 
+        months: list[int]
+    ) -> list[int]:
         """
         Validate that months is a list of integers between 1 and 12.
         Args:
             months (list[int]): List of month numbers.
         Raises:
             ValueError: If months is not a valid list of integers in range.
+        Returns:
+            list[int]: Unique, validated month numbers.
         """
-        if not isinstance(months, list):
-            raise ValueError("Months must be a list of integers")
-        if not all(isinstance(m, int) for m in months):
-            raise ValueError("All months must be integers")
-        if any(m < 1 or m > 12 for m in months):
-            raise ValueError("Months must be between 1 and 12")
-
-        # Ensure there months are unique
+        if not all(isinstance(m, int) and 1 <= m <= 12 for m in months):
+            raise ValueError("Months must be integers between 1 and 12")
         return list(set(months))
 
-    @time_execution
+    @timed
+    @cacheable
     def avg_dep_delay_per_airline(
         self, 
         airline: str, 
@@ -67,33 +69,21 @@ class FlightInsights:
         if months:
             months = self._validate_months(months)
 
-        cache_key = f"avg_dep_delay_{airline}_{months}" if months else f"avg_dep_delay_{airline}"
-
-        if self.cache:
-            cached_value = self.cache.get(cache_key)
-            if cached_value is not None:
-                return float(cached_value)
-
-        airline_df = self.flights_df[self.flights_df[FlightInsights._AIRLINE_COLUMN] == airline]
+        ds = self.data_source.filter_by_airline(airline)
 
         if months:
-            airline_df = airline_df[airline_df["MONTH"].isin(months)]
+            ds = ds.filter_by_months(months)
 
-        if airline_df.empty:
-            if months:
-                raise ValueError(f"No data found for airline: {airline} with months: {months}")
-            else:
-                raise ValueError(f"No data found for airline: {airline}")
+        if ds.is_empty():
+            raise ValueError(f"No data found for airline: {airline}" + (f" with months: {months}" if months else ""))
 
-        late_flights = airline_df[airline_df[FlightInsights._DEPARTURE_DELAY_COLUMN] > 0]
-        average_delay = float(late_flights[FlightInsights._DEPARTURE_DELAY_COLUMN].mean(skipna=True))
-
-        if self.cache:
-            self.cache.set(cache_key, average_delay)
+        ds = ds.filter_positive_delays()
+        average_delay = ds.mean(FlightAttributes.DEPARTURE_DELAY)
 
         return average_delay
 
-    @time_execution
+    @timed
+    @cacheable
     def max_dep_delay_per_airline(
         self, airline: str, months: list[int] | None = None
     ) -> float:
@@ -113,33 +103,21 @@ class FlightInsights:
         if months:
             months = self._validate_months(months)
 
-        cache_key = f"max_dep_delay_{airline}_{months}" if months else f"max_dep_delay_{airline}"
-
-        if self.cache:
-            cached_value = self.cache.get(cache_key)
-            if cached_value is not None:
-                return float(cached_value)
-
-        airline_df = self.flights_df[self.flights_df[FlightInsights._AIRLINE_COLUMN] == airline]
+        ds = self.data_source.filter_by_airline(airline)
 
         if months:
-            airline_df = airline_df[airline_df["MONTH"].isin(months)]
+            ds = ds.filter_by_months(months)
 
-        if airline_df.empty:
-            if months:
-                raise ValueError(f"No data found for airline: {airline} with months: {months}")
-            else:
-                raise ValueError(f"No data found for airline: {airline}")
+        if ds.is_empty():
+            raise ValueError(f"No data found for airline: {airline}" + (f" with months: {months}" if months else ""))
 
-        late_flights = airline_df[airline_df[FlightInsights._DEPARTURE_DELAY_COLUMN] > 0]
-        max_delay = float(late_flights[FlightInsights._DEPARTURE_DELAY_COLUMN].max(skipna=True))
-
-        if self.cache:
-            self.cache.set(cache_key, max_delay)
+        ds = ds.filter_positive_delays()
+        max_delay = ds.max(FlightAttributes.DEPARTURE_DELAY)
 
         return max_delay
 
-    @time_execution
+    @timed
+    @cacheable
     def total_flights_per_origin_airport(self, airport: str) -> int:
         """
         Calculate the total number of unique flights departing from a given airport.
@@ -153,21 +131,11 @@ class FlightInsights:
         if not airport or airport.strip() == "":
             raise ValueError("Airport name cannot be empty")
 
-        cache_key = f"total_flights_origin_{airport}"
+        ds = self.data_source.filter_by_origin_airport(airport)
 
-        if self.cache:
-            cached_value = self.cache.get(cache_key)
-            if cached_value is not None:
-                return int(cached_value)
-
-        airport_df = self.flights_df[self.flights_df[FlightInsights._ORIGIN_AIRPORT_COLUMN] == airport]
-
-        if airport_df.empty:
+        if ds.is_empty():
             raise ValueError(f"No data found for airport: {airport}")
 
-        total_flights = int(airport_df[FlightInsights._FLIGHT_NUMBER_COLUMN].nunique(dropna=True))
-
-        if self.cache:
-            self.cache.set(cache_key, total_flights)
+        total_flights = ds.count_unique(FlightAttributes.FLIGHT_NUMBER)
 
         return total_flights
