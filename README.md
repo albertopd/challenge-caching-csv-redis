@@ -44,6 +44,7 @@ challenge-caching-csv-redis/
 - Python 3.13 or later
 - Redis server (if not using Docker)
 - Required Python packages listed in `requirements.txt`
+- Dataset `flights.csv` from [Kaggle – Airline Delay Dataset](https://www.kaggle.com/datasets/usdot/flight-delays)
 
 ## 📦 Installation
 
