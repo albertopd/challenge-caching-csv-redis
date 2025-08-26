@@ -46,11 +46,12 @@ challenge-caching-csv-redis/
 ├── README.md                       # Project documentation
 └── requirements.txt                # Python dependencies
 ```
+
 ## 📋 Requirements
 
 - Python 3.13 or later
 - Redis server (if not using Docker)
-- Required Python packages listed in `requirements.txt`
+- Required Python packages listed in [requirements.txt](requirements.txt)
 
 ## 📦 Installation
 
