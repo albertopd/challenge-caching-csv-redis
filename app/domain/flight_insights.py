@@ -29,7 +29,7 @@ class FlightInsights:
         self.data_source = data_source
         self.cache = cache
 
-    def _validate_months(
+    def __validate_months(
         self, 
         months: list[int]
     ) -> list[int]:
@@ -67,7 +67,7 @@ class FlightInsights:
             raise ValueError("Airline name cannot be empty")
 
         if months:
-            months = self._validate_months(months)
+            months = self.__validate_months(months)
 
         ds = self.data_source.filter_by_airline(airline)
 
@@ -101,7 +101,7 @@ class FlightInsights:
             raise ValueError("Airline name cannot be empty")
 
         if months:
-            months = self._validate_months(months)
+            months = self.__validate_months(months)
 
         ds = self.data_source.filter_by_airline(airline)
 

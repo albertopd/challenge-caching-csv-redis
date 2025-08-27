@@ -6,7 +6,7 @@ from app.domain.flight_insights import FlightInsights
 from app.caching.redis_cache import RedisCache
 
 
-def setup_redis_cache() -> RedisCache:
+def __setup_redis_cache() -> RedisCache:
     """
     Set up and return a RedisCache instance using environment variables or defaults.
     Returns:
@@ -25,7 +25,7 @@ def setup_redis_cache() -> RedisCache:
     )
 
 
-def setup_data_source() -> FlightDataSource:
+def __setup_data_source() -> FlightDataSource:
     """
     Set up and return the flight data source.
     By default, uses CsvFlightDataSource. To swap out for another source (e.g., database),
@@ -48,8 +48,8 @@ def main():
     )
     
     try:
-        cache = setup_redis_cache()
-        data_source = setup_data_source()
+        cache = __setup_redis_cache()
+        data_source = __setup_data_source()
         flight_insights = FlightInsights(data_source, cache)
 
         avg_departure_delay = int(flight_insights.avg_dep_delay_per_airline("VX"))
