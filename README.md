@@ -1,4 +1,4 @@
-# Challenge: Caching CSV Data Processing with Redis in Python
+# Caching CSV Data Processing with Redis in Python
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Python](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/) ![Polars](https://img.shields.io/badge/polars-0.20-%23013243.svg?logo=polars) ![Redis](https://img.shields.io/badge/redis-6.4-red?logo=redis&logoColor=white) ![Docker](https://img.shields.io/badge/docker-26.1-%230db7ed.svg?logo=docker&logoColor=white)
 
