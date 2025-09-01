@@ -1,8 +1,8 @@
-# Caching CSV Data Processing with Redis in Python
+# Caching Flights Data Redis
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Python](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/) ![Polars](https://img.shields.io/badge/polars-0.20-%23013243.svg?logo=polars) ![Redis](https://img.shields.io/badge/redis-6.4-red?logo=redis&logoColor=white) ![Docker](https://img.shields.io/badge/docker-26.1-%230db7ed.svg?logo=docker&logoColor=white)
 
-This project demonstrates the use of Redis as a caching layer for processing CSV data in Python. By caching intermediate results, data processing tasks become significantly faster, especially with large datasets.
+This project demonstrates the use of Redis as a caching layer for processing flights data. By caching intermediate results, data processing tasks become significantly faster, especially with large datasets.
 
 ## ✨ Features
 
