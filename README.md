@@ -16,7 +16,7 @@ This project demonstrates the use of Redis as a caching layer for processing fli
 ## 📂 Project Structure
 
 ```
-challenge-caching-csv-redis/
+redis-cache-flights-data/
 |
 ├── app/                            # Application source code
 |   ├── caching/                    # All cache-related logic
@@ -59,8 +59,8 @@ challenge-caching-csv-redis/
 
 1. Clone the repository:
 	```sh
-	git clone https://github.com/albertopd/challenge-caching-csv-redis.git
-	cd challenge-caching-csv-redis
+	git clone https://github.com/albertopd/redis-cache-flights-data.git
+	cd redis-cache-flights-data
 	```
 2. Install Python dependencies:
 	```sh
@@ -72,8 +72,8 @@ challenge-caching-csv-redis/
 
 1. Clone the repository:
 	```sh
-	git clone https://github.com/albertopd/challenge-caching-csv-redis.git
-	cd challenge-caching-csv-redis
+	git clone https://github.com/albertopd/redis-cache-flights-data.git
+	cd redis-cache-flights-data
 	```
 
 2. Build and start service and app:
